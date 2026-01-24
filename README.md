@@ -2,7 +2,7 @@
 
 ## 🎯 Project Overview
 
-This project implements an intelligent traffic signal controller using **Proximal Policy Optimization (PPO)**, a state-of-the-art deep reinforcement learning algorithm. The system intelligently manages traffic lights to prioritize emergency vehicles while maintaining optimal flow for all vehicle types.
+This project leverages Reinforcement Learning (PPO) to revolutionize urban mobility by transforming traditional traffic signals into intelligent, adaptive controllers. Specifically designed for the complex, high-density traffic of Bangalore, the system was trained and validated using real-world road topologies from Trinity Circle and Indiranagar. By processing real-time data on queue lengths,traffic data and vehicle types, the agent learns to prioritize high-stakes commuters, such as emergency vehicles and trucks, through a weighted reward mechanism. The model demonstrates impressive generalization, achieving a 10.6% reduction in emergency response times at Trinity Circle and maintaining robust performance when transferred to the Indiranagar network without additional fine-tuning. Ultimately, this work provides a scalable, data-driven framework for reducing congestion and improving life-critical transit efficiency in chaotic metropolitan environments.
 
 ### ✨ Key Achievement
 **10.6% improvement** in emergency vehicle response time compared to fixed-time baseline control
