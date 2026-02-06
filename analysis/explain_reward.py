@@ -9,14 +9,18 @@ Usage:
     python explain_reward.py
 """
 
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 import json
 from datetime import datetime
 
-from SumoEnv import SumoEnv
-from ppo_agent import load_ppo_agent
+# Add parent directory to path for imports from utils
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utils.SumoEnv import SumoEnv
+from utils.ppo_agent import load_ppo_agent
 
 
 def run_reward_analysis_episode(

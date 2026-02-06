@@ -16,9 +16,12 @@ from pathlib import Path
 import argparse
 from datetime import datetime
 
+# Add parent directory to path for imports from utils
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 # Assuming SumoEnv and load_ppo_agent are correctly imported from your modules
-from SumoEnv import SumoEnv
-from ppo_agent import load_ppo_agent
+from utils.SumoEnv import SumoEnv
+from utils.ppo_agent import load_ppo_agent
 
 
 class EvaluationConfig:

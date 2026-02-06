@@ -20,9 +20,12 @@ from datetime import datetime
 from typing import Callable, List
 import time
 
+# Add parent directory to path for imports from utils
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 # --- New Imports for Parallelization & Stable-Baselines3 ---
-from SumoEnv import SumoEnv
-from ppo_agent import (
+from utils.SumoEnv import SumoEnv
+from utils.ppo_agent import (
     create_ppo_agent,
     PPOAgentConfig,
     setup_evaluation_callbacks,

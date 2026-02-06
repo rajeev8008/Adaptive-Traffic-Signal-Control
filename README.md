@@ -53,12 +53,22 @@ sumo-traffic-rl-project/
 ├── README.md                            # This file - start here!
 ├── requirements.txt                     # Python dependencies
 │
-├── CORE SCRIPTS
-├── ppo_agent.py                         # PPO agent configuration
-├── train_ppo.py                         # Training script (150k steps)
-├── evaluate_ppo.py                      # Comprehensive evaluation
-├── baseline.py                          # Fixed-time baseline
-├── SumoEnv.py                           # SUMO environment wrapper
+├── SCRIPTS
+├── scripts/
+│   ├── train_ppo.py                     # Training script (150k steps)
+│   ├── evaluate_ppo.py                  # Comprehensive evaluation
+│   ├── baseline.py                      # Fixed-time baseline
+│   └── visualize_model.py               # Agent behavior visualization
+│
+├── UTILITIES & CORE MODULES
+├── utils/
+│   ├── SumoEnv.py                       # SUMO environment wrapper
+│   └── ppo_agent.py                     # PPO agent configuration
+│
+├── ANALYSIS & EXPLAINABILITY (XAI)
+├── analysis/
+│   ├── explain_reward.py                # Reward decomposition analysis
+│   └── reward_analysis.json             # Analysis results
 │
 ├── DATA AND MODELS
 ├── models/ppo_mg_road/
@@ -100,13 +110,19 @@ python -c "from SumoEnv import SumoEnv; print('Ready')"
 ### Usage
 ```bash
 # Train a new model (~30-40 minutes, 150k steps)
-python train_ppo.py --no-gui
+python scripts/train_ppo.py --no-gui
 
 # Evaluate the trained model
-python evaluate_ppo.py --model models/ppo_mg_road/best_model.zip
+python scripts/evaluate_ppo.py --model models/ppo_mg_road/best_model.zip
+
+# Analyze reward decomposition (XAI)
+python analysis/explain_reward.py
 
 # Monitor training with TensorBoard
 tensorboard --logdir logs/ppo_training
+
+# Visualize agent behavior
+python scripts/visualize_model.py
 ```
 
 ---
@@ -156,6 +172,26 @@ Edit `train_ppo.py` to customize:
 - Implements traditional fixed-time traffic signal control
 - Uses same vehicle priority weights as PPO
 - Provides performance baseline
+
+---
+
+## Explainable AI (XAI) Components
+
+### **explain_reward.py** - Reward Decomposition Analysis
+- Analyzes multi-objective reward contributions from the PPO agent
+- Visualizes the percentage contribution of each reward component:
+  - Emergency vehicle wait time reduction (30%)
+  - Traffic flow improvement (45%)
+  - Truck wait time reduction (15%)
+  - Car wait time reduction (10%)
+- Proves the agent actively optimizes for emergency vehicles
+- Generates JSON analysis file with detailed metrics
+
+### Key XAI Features
+- **Reward Decomposition**: Break down total rewards into individual components
+- **Performance Attribution**: Show which vehicle types benefit most from the agent
+- **Transparency**: Visual and numerical analysis of agent decision-making
+- **Validation**: Verify the agent is learning the correct priorities
 
 ---
 
