@@ -67,7 +67,8 @@ sumo-traffic-rl-project/
 │
 ├── ANALYSIS & EXPLAINABILITY (XAI)
 ├── analysis/
-│   ├── explain_reward.py                # Reward decomposition analysis
+│   ├── explain_reward.py                # Reward decomposition (vehicle priority)
+│   ├── explain_shap.py                  # SHAP feature attribution analysis
 │   └── reward_analysis.json             # Analysis results
 │
 ├── DATA AND MODELS
@@ -78,7 +79,8 @@ sumo-traffic-rl-project/
 │   ├── ppo_training/
 │   │   ├── config.json                  # Training configuration
 │   │   └── validation_results.json      # Training metrics
-│   └── ppo_evaluation/                  # Evaluation results
+│   ├── ppo_evaluation/                  # Evaluation results
+│   └── policy_explanation/              # SHAP visualizations & analysis
 │
 └── TRAFFIC NETWORKS
     ├── SUMO_Trinity_Traffic_sim/        # Primary training network
@@ -112,11 +114,15 @@ python -c "from SumoEnv import SumoEnv; print('Ready')"
 # Train a new model (~30-40 minutes, 150k steps)
 python scripts/train_ppo.py --no-gui
 
-# Evaluate the trained model
+# Evaluate trained model (fixes vs baseline)
 python scripts/evaluate_ppo.py --model models/ppo_mg_road/best_model.zip
 
-# Analyze reward decomposition (XAI)
+# Analyze reward decomposition (vehicle priority)
 python analysis/explain_reward.py
+
+# SHAP feature attribution (decision explainability)
+python analysis/explain_shap.py
+# Outputs: shap_summary_plot.png, shap_force_plot.html
 
 # Monitor training with TensorBoard
 tensorboard --logdir logs/ppo_training
@@ -179,7 +185,7 @@ Edit `train_ppo.py` to customize:
 
 ### **explain_reward.py** - Reward Decomposition Analysis
 - Analyzes multi-objective reward contributions from the PPO agent
-- Visualizes the percentage contribution of each reward component:
+- Visualizes percentage contribution of each reward component:
   - Emergency vehicle wait time reduction (30%)
   - Traffic flow improvement (45%)
   - Truck wait time reduction (15%)
@@ -187,11 +193,20 @@ Edit `train_ppo.py` to customize:
 - Proves the agent actively optimizes for emergency vehicles
 - Generates JSON analysis file with detailed metrics
 
+### **explain_shap.py** - SHAP Feature Attribution Analysis
+- Uses SHAP (SHapley Additive exPlanations) for decision explainability
+- Generates two visualizations:
+  - **Summary Plot**: Global feature importance (bar chart of top 20 features)
+  - **Force Plot**: Local explanation for specific emergency observation
+- Shows which features drive the agent toward switching traffic phases
+- Identifies queue lengths and emergency counts as primary decision factors
+- Fully interpretable feature names (Queue_Lane_0, Emerg_Lane_1, etc.)
+
 ### Key XAI Features
-- **Reward Decomposition**: Break down total rewards into individual components
-- **Performance Attribution**: Show which vehicle types benefit most from the agent
-- **Transparency**: Visual and numerical analysis of agent decision-making
-- **Validation**: Verify the agent is learning the correct priorities
+- **Multi-layer Transparency**: Reward decomposition + feature attribution
+- **Global & Local Explanations**: Summary plots + force plots for specific events
+- **Vehicle Priority Validation**: Verify emergency vehicle optimization
+- **Decision Interpretability**: Understand which traffic features influence agents
 
 ---
 
@@ -267,23 +282,30 @@ The implementation includes multiple safeguards against overfitting:
 
 ## Usage Examples
 
-### Example 1: Quick Evaluation (2 minutes)
+### Example 1: Evaluate Model Performance (2 min)
 ```bash
-python evaluate_ppo.py --model models/ppo_mg_road/best_model.zip
+python scripts/evaluate_ppo.py --model models/ppo_mg_road/best_model.zip
 ```
-Output: Comparison tables, improvement percentages, metrics saved to JSON
+Produces: Performance comparison tables, improvement percentages
 
-### Example 2: Train New Model (30-40 minutes)
+### Example 2: Complete Training Pipeline (30-40 min)
 ```bash
-python train_ppo.py --no-gui
+python scripts/train_ppo.py --no-gui
 ```
-Output: Models saved to `models/ppo_mg_road/`, logs to `logs/ppo_training/`
+Produces: Trained model, TensorBoard logs, validation metrics
 
-### Example 3: Compare Baseline vs PPO
+### Example 3: Full Analysis Suite (10 min)
 ```bash
-python baseline.py                  # Fixed-time control
-python evaluate_ppo.py              # PPO agent
-# Review travel times and improvements
+python analysis/explain_reward.py    # Vehicle priority analysis
+python analysis/explain_shap.py      # Feature importance analysis
+```
+Produces: JSON metrics, PNG plots, HTML force plots
+
+### Example 4: Baseline Comparison
+```bash
+python scripts/baseline.py           # Fixed-time signal control
+python scripts/evaluate_ppo.py       # Intelligent agent control
+compare results                       # Review improvements
 ```
 
 ---
