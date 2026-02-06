@@ -22,7 +22,7 @@ import json
 # Stable-Baselines3 and sklearn
 from stable_baselines3 import PPO
 from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 # Local imports
 from SumoEnv import SumoEnv
@@ -52,34 +52,45 @@ class ExplainConfig:
 
 
 # --- Feature Names ---
-def get_feature_names():
+def get_feature_names(num_lanes=None):
     """
-    Generate feature names for the 43-dimensional observation space.
+    Generate feature names for the observation space.
     
     Observation structure:
-    - Indices 0-13: Queue lengths per lane (14 lanes)
-    - Index 14: Current traffic light phase (1 feature)
-    - Indices 15-28: Emergency vehicle counts per lane (14 lanes)
-    - Indices 29-42: Bus vehicle counts per lane (14 lanes)
+    - Indices 0 to (num_lanes-1): Queue lengths per lane
+    - Index num_lanes: Current traffic light phase (1 feature)
+    - Indices (num_lanes+1) to (2*num_lanes): Emergency vehicle counts per lane
+    - Indices (2*num_lanes+1) to (3*num_lanes): Bus vehicle counts per lane
+    
+    Args:
+        num_lanes: Number of lanes (if None, defaults to 14 for backward compatibility)
+    
+    Returns:
+        List of feature names
     """
+    if num_lanes is None:
+        num_lanes = 14  # Default for backward compatibility
+    
     feature_names = []
     
-    # Queue lengths (0-13)
-    for i in range(14):
+    # Queue lengths (0 to num_lanes-1)
+    for i in range(num_lanes):
         feature_names.append(f"Queue_Lane_{i}")
     
-    # Traffic light phase (14)
+    # Traffic light phase (num_lanes)
     feature_names.append("Traffic_Light_Phase")
     
-    # Emergency vehicle counts (15-28)
-    for i in range(14):
+    # Emergency vehicle counts (num_lanes+1 to 2*num_lanes)
+    for i in range(num_lanes):
         feature_names.append(f"Emergency_Lane_{i}")
     
-    # Bus vehicle counts (29-42)
-    for i in range(14):
+    # Bus vehicle counts (2*num_lanes+1 to 3*num_lanes)
+    for i in range(num_lanes):
         feature_names.append(f"Bus_Lane_{i}")
     
-    assert len(feature_names) == 43, f"Expected 43 features, got {len(feature_names)}"
+    expected_features = 1 + 3 * num_lanes
+    assert len(feature_names) == expected_features, \
+        f"Expected {expected_features} features, got {len(feature_names)}"
     return feature_names
 
 
@@ -184,13 +195,14 @@ def train_decision_tree(X, y, feature_names, max_depth=4):
 
 
 # --- Fidelity Score Calculation ---
-def calculate_fidelity(agent, dt_classifier, X, y, env=None):
+def calculate_fidelity(agent, dt_classifier, X, y, env=None, feature_names=None):
     """
     Calculate how well the Decision Tree mimics the PPO agent.
     
     Fidelity is measured as:
     - Tree accuracy on the collected dataset (ideally should be high)
     - Agreement between tree predictions and agent predictions on new data
+    - Confusion matrix to detect if rare actions (Switch) are being missed
     
     Args:
         agent: Trained PPO agent
@@ -198,10 +210,14 @@ def calculate_fidelity(agent, dt_classifier, X, y, env=None):
         X: Observations used for training the tree
         y: Ground truth actions from agent
         env: SumoEnv instance (optional, for fresh validation samples)
+        feature_names: List of feature names (for reporting)
     
     Returns:
         fidelity_metrics: Dictionary with fidelity scores
     """
+    if feature_names is None:
+        feature_names = get_feature_names()
+    
     print(f"\n[FIDELITY] Calculating fidelity scores...")
     
     # Score 1: Tree accuracy on training data
@@ -214,16 +230,48 @@ def calculate_fidelity(agent, dt_classifier, X, y, env=None):
     agreement = np.mean(tree_pred == y)
     print(f"[FIDELITY] Agreement between Tree and Agent: {agreement:.4f}")
     
-    # Score 3: Feature importance
+    # Score 3: Confusion Matrix & Classification Report
+    unique_classes = np.unique(y)
+    
+    if len(unique_classes) == 2:
+        # Both classes present - show detailed report
+        print(f"\n[FIDELITY] Detailed Classification Report:")
+        print(classification_report(y, tree_pred, target_names=["Keep Phase", "Switch Phase"]))
+        
+        cm = confusion_matrix(y, tree_pred)
+        print(f"\n[FIDELITY] Confusion Matrix:")
+        print(f"  True Negatives (Correctly Kept Phase):   {cm[0][0]}")
+        print(f"  False Positives (Wrongly Switched):       {cm[0][1]}")
+        print(f"  False Negatives (Missed Switch Phase):    {cm[1][0]}  <-- CRITICAL STAT")
+        print(f"  True Positives (Correctly Switched):      {cm[1][1]}")
+        
+        # Warn if false negatives are high
+        if cm[1][0] > 0:
+            miss_rate = cm[1][0] / (cm[1][0] + cm[1][1]) if (cm[1][0] + cm[1][1]) > 0 else 0
+            if miss_rate > 0.1:
+                print(f"\n[WARNING] Decision tree MISSES {100*miss_rate:.1f}% of Switch Phase decisions!")
+                print(f"[SUGGESTION] This means the tree is not fully capturing when the agent switches.")
+                print(f"[SUGGESTION] Try: increasing --depth, collecting more episodes, or using stochastic sampling")
+    else:
+        # Only one class present
+        print(f"\n[FIDELITY] ⚠️  IMPORTANT: Only one action class present in collected data!")
+        print(f"[FIDELITY] Classes found: {unique_classes}")
+        print(f"[FIDELITY] Classification report unavailable (need both actions to evaluate)")
+        print(f"\n[SUGGESTION] To see meaningful decision tree logic:")
+        print(f"  1. Use --stochastic flag to sample actions probabilistically")
+        print(f"  2. Increase --episodes (try 20+)")
+        print(f"  3. Use a checkpoint from during training instead of the final model")
+    
+    # Score 4: Feature importance
     feature_importance = dt_classifier.feature_importances_
     important_idx = np.argsort(feature_importance)[::-1][:5]  # Top 5
     
-    feature_names = get_feature_names()
     print(f"\n[FIDELITY] Top 5 most important features:")
     for rank, idx in enumerate(important_idx, 1):
         importance = feature_importance[idx]
         print(f"  {rank}. {feature_names[idx]}: {importance:.4f}")
     
+    # Build metrics dictionary
     metrics = {
         "tree_accuracy": float(tree_accuracy),
         "agent_agreement": float(agreement),
@@ -239,6 +287,20 @@ def calculate_fidelity(agent, dt_classifier, X, y, env=None):
             for rank, idx in enumerate(important_idx, 1)
         ]
     }
+    
+    # Add confusion matrix only if both classes present
+    if len(unique_classes) == 2:
+        cm = confusion_matrix(y, tree_pred)
+        metrics["confusion_matrix"] = {
+            "true_negatives": int(cm[0][0]),
+            "false_positives": int(cm[0][1]),
+            "false_negatives": int(cm[1][0]),
+            "true_positives": int(cm[1][1])
+        }
+    else:
+        metrics["confusion_matrix"] = {
+            "note": "Only one action class present in data - confusion matrix unavailable"
+        }
     
     return metrics
 
@@ -292,6 +354,7 @@ def visualize_tree(dt_classifier, feature_names, output_path, dpi=300):
 def _save_tree_interpretation(dt_classifier, feature_names, output_path):
     """
     Create a human-readable text explanation of the decision tree.
+    Highlights rules involving Emergency Vehicles (high priority).
     
     Args:
         dt_classifier: Trained DecisionTreeClassifier
@@ -371,6 +434,30 @@ def _save_tree_interpretation(dt_classifier, feature_names, output_path):
         interpretation_lines.append("")
         
         interpretation_lines.append("=" * 80)
+        interpretation_lines.append("PRIORITY RULES: EMERGENCY VEHICLE HANDLING")
+        interpretation_lines.append("=" * 80)
+        interpretation_lines.append("")
+        interpretation_lines.append("The following rules involve Emergency Vehicles (high priority):")
+        interpretation_lines.append("These rules are critical for emergency response times.")
+        interpretation_lines.append("")
+        
+        # Extract emergency-related feature indices
+        emerg_features = [i for i, name in enumerate(feature_names) if "Emergency" in name]
+        
+        if emerg_features:
+            interpretation_lines.append("Emergency-related features in the tree:")
+            for idx in emerg_features:
+                if feature_importance[idx] > 0:
+                    interpretation_lines.append(
+                        f"  - {feature_names[idx]:30s} - Importance: {feature_importance[idx]:.4f}"
+                    )
+            interpretation_lines.append("")
+            interpretation_lines.append("When Emergency vehicles are present (value > 0):")
+            interpretation_lines.append("  -> The decision tree should prioritize allowing them through")
+            interpretation_lines.append("  -> This may override normal queue-based decisions")
+        
+        interpretation_lines.append("")
+        interpretation_lines.append("=" * 80)
         interpretation_lines.append("KEY INSIGHTS:")
         interpretation_lines.append("=" * 80)
         interpretation_lines.append("")
@@ -383,14 +470,14 @@ def _save_tree_interpretation(dt_classifier, feature_names, output_path):
         interpretation_lines.append("")
         
         # Write to file
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(interpretation_lines))
         
         print(f"[VISUALIZATION] Tree interpretation saved to {output_path}")
         print("\n" + "=" * 80)
         print("DECISION TREE EXPLANATION:")
         print("=" * 80)
-        for line in interpretation_lines[:30]:
+        for line in interpretation_lines[:35]:
             print(line)
         print("...[see full details in decision_tree_logic_interpretation.txt]...")
         
@@ -442,9 +529,16 @@ def explain_policy(model_path=None, episodes=10, stochastic=False):
     # --- 4. Collect Data ---
     X, y = collect_data(agent, env, episodes=episodes, stochastic=stochastic)
     
-    # --- 5. Get Feature Names ---
-    feature_names = get_feature_names()
-    print(f"\n[FEATURES] Feature space: {len(feature_names)} features")
+    # --- 5. Get Feature Names (dynamically from observation space) ---
+    # Calculate num_lanes from observation space shape
+    # Observation structure: [Queue] + [Phase] + [Emergency] + [Bus]
+    # obs_dim = num_lanes + 1 + num_lanes + num_lanes = 3*num_lanes + 1
+    num_lanes = (env.observation_space.shape[0] - 1) // 3
+    print(f"\n[FEATURES] Detected {num_lanes} lanes from observation space")
+    print(f"[FEATURES] Total observation dimensions: {env.observation_space.shape[0]}")
+    
+    feature_names = get_feature_names(num_lanes=num_lanes)
+    print(f"[FEATURES] Generated {len(feature_names)} feature names")
     
     # --- 6. Check Action Balance ---
     action_counts = np.bincount(y)
@@ -460,7 +554,7 @@ def explain_policy(model_path=None, episodes=10, stochastic=False):
     dt_classifier = train_decision_tree(X, y, feature_names, max_depth=ExplainConfig.TREE_MAX_DEPTH)
     
     # --- 8. Calculate Fidelity ---
-    fidelity_metrics = calculate_fidelity(agent, dt_classifier, X, y, env)
+    fidelity_metrics = calculate_fidelity(agent, dt_classifier, X, y, env=env, feature_names=feature_names)
     
     # --- 9. Visualize Tree ---
     tree_png_path = os.path.join(ExplainConfig.OUTPUT_DIR, ExplainConfig.TREE_PNG)

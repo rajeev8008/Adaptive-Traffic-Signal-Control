@@ -1,41 +1,47 @@
 {
-  "timestamp": "2026-02-06T21:54:20.423192",
+  "timestamp": "2026-02-06T22:23:07.280004",
   "model_path": "./models/ppo_mg_road/best_model.zip",
-  "episodes_collected": 6,
+  "episodes_collected": 15,
   "sampling_mode": "stochastic",
   "fidelity_metrics": {
-    "tree_accuracy": 0.5569444444444445,
-    "agent_agreement": 0.5569444444444445,
-    "tree_depth": 4,
-    "tree_leaves": 11,
-    "num_samples": 720,
+    "tree_accuracy": 0.545,
+    "agent_agreement": 0.545,
+    "tree_depth": 5,
+    "tree_leaves": 18,
+    "num_samples": 1800,
     "top_features": [
       {
         "rank": 1,
-        "feature": "Queue_Lane_4",
-        "importance": 0.18936577219352893
+        "feature": "Queue_Lane_2",
+        "importance": 0.19668242083869852
       },
       {
         "rank": 2,
-        "feature": "Queue_Lane_1",
-        "importance": 0.16266761560432955
+        "feature": "Bus_Lane_1",
+        "importance": 0.1437685731457747
       },
       {
         "rank": 3,
-        "feature": "Traffic_Light_Phase",
-        "importance": 0.15430050586144964
+        "feature": "Bus_Lane_0",
+        "importance": 0.1323624669064176
       },
       {
         "rank": 4,
-        "feature": "Emergency_Lane_3",
-        "importance": 0.15050007074346736
+        "feature": "Queue_Lane_11",
+        "importance": 0.1081926917472
       },
       {
         "rank": 5,
-        "feature": "Bus_Lane_11",
-        "importance": 0.0975487499491786
+        "feature": "Queue_Lane_12",
+        "importance": 0.10047714105892257
       }
-    ]
+    ],
+    "confusion_matrix": {
+      "true_negatives": 126,
+      "false_positives": 739,
+      "false_negatives": 80,
+      "true_positives": 855
+    }
   },
   "feature_names": [
     "Queue_Lane_0",
@@ -83,7 +89,7 @@
     "Bus_Lane_13"
   ],
   "tree_params": {
-    "max_depth": 4,
+    "max_depth": 5,
     "min_samples_split": 5,
     "min_samples_leaf": 2
   }
