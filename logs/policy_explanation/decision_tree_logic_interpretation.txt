@@ -1,0 +1,68 @@
+================================================================================
+TRAFFIC SIGNAL CONTROL DECISION TREE INTERPRETATION
+================================================================================
+
+ACTION MEANINGS:
+  Class 0: KEEP PHASE - Continue current traffic light phase
+  Class 1: SWITCH PHASE - Change to next traffic light phase
+
+================================================================================
+TOP 5 DECISION FACTORS (Most Important)
+================================================================================
+
+1. Queue_Lane_4              - Importance: 0.1894 (18.9%)
+2. Queue_Lane_1              - Importance: 0.1627 (16.3%)
+3. Traffic_Light_Phase       - Importance: 0.1543 (15.4%)
+4. Emergency_Lane_3          - Importance: 0.1505 (15.1%)
+5. Bus_Lane_11               - Importance: 0.0975 (9.8%)
+
+================================================================================
+TREE STATISTICS
+================================================================================
+
+Tree Depth:        4
+Number of Leaves:  11
+Tree Accuracy:     See tree_summary.json
+
+================================================================================
+HOW TO READ THE VISUALIZATION:
+================================================================================
+
+1. START AT THE TOP:
+   The top node shows the first decision point (usually Queue_Lane_X)
+
+2. FOLLOW LEFT/RIGHT BRANCHES:
+   - LEFT branch: if feature <= threshold
+   - RIGHT branch: if feature > threshold
+
+3. READ THE NODE INFORMATION:
+   - Feature name & threshold value at top
+   - Percentages (12% / 88%) show action distribution
+   - Color indicates dominant decision
+     * Blue = KEEP PHASE (higher percentage)
+     * Orange/Red = SWITCH PHASE (higher percentage)
+
+4. REACH A LEAF (BOTTOM NODE):
+   This shows the final decision for that condition
+
+================================================================================
+EXAMPLE INTERPRETATION:
+================================================================================
+
+IF  Queue_Lane_3 <= 5.0:
+  AND Bus_Lane_0 <= 2.0:
+    THEN: SWITCH PHASE (because queues are small, room for others)
+
+ELSE (Queue_Lane_3 > 5.0):
+    THEN: KEEP PHASE (because queue is too long, don't switch)
+
+================================================================================
+KEY INSIGHTS:
+================================================================================
+
+Most Important Feature: Queue_Lane_4
+This sensor has the most influence on switching decisions.
+
+Less Important Features:
+These features at the bottom of the tree fine-tune decisions
+when the top conditions are ambiguous.

@@ -1,0 +1,90 @@
+{
+  "timestamp": "2026-02-06T21:54:20.423192",
+  "model_path": "./models/ppo_mg_road/best_model.zip",
+  "episodes_collected": 6,
+  "sampling_mode": "stochastic",
+  "fidelity_metrics": {
+    "tree_accuracy": 0.5569444444444445,
+    "agent_agreement": 0.5569444444444445,
+    "tree_depth": 4,
+    "tree_leaves": 11,
+    "num_samples": 720,
+    "top_features": [
+      {
+        "rank": 1,
+        "feature": "Queue_Lane_4",
+        "importance": 0.18936577219352893
+      },
+      {
+        "rank": 2,
+        "feature": "Queue_Lane_1",
+        "importance": 0.16266761560432955
+      },
+      {
+        "rank": 3,
+        "feature": "Traffic_Light_Phase",
+        "importance": 0.15430050586144964
+      },
+      {
+        "rank": 4,
+        "feature": "Emergency_Lane_3",
+        "importance": 0.15050007074346736
+      },
+      {
+        "rank": 5,
+        "feature": "Bus_Lane_11",
+        "importance": 0.0975487499491786
+      }
+    ]
+  },
+  "feature_names": [
+    "Queue_Lane_0",
+    "Queue_Lane_1",
+    "Queue_Lane_2",
+    "Queue_Lane_3",
+    "Queue_Lane_4",
+    "Queue_Lane_5",
+    "Queue_Lane_6",
+    "Queue_Lane_7",
+    "Queue_Lane_8",
+    "Queue_Lane_9",
+    "Queue_Lane_10",
+    "Queue_Lane_11",
+    "Queue_Lane_12",
+    "Queue_Lane_13",
+    "Traffic_Light_Phase",
+    "Emergency_Lane_0",
+    "Emergency_Lane_1",
+    "Emergency_Lane_2",
+    "Emergency_Lane_3",
+    "Emergency_Lane_4",
+    "Emergency_Lane_5",
+    "Emergency_Lane_6",
+    "Emergency_Lane_7",
+    "Emergency_Lane_8",
+    "Emergency_Lane_9",
+    "Emergency_Lane_10",
+    "Emergency_Lane_11",
+    "Emergency_Lane_12",
+    "Emergency_Lane_13",
+    "Bus_Lane_0",
+    "Bus_Lane_1",
+    "Bus_Lane_2",
+    "Bus_Lane_3",
+    "Bus_Lane_4",
+    "Bus_Lane_5",
+    "Bus_Lane_6",
+    "Bus_Lane_7",
+    "Bus_Lane_8",
+    "Bus_Lane_9",
+    "Bus_Lane_10",
+    "Bus_Lane_11",
+    "Bus_Lane_12",
+    "Bus_Lane_13"
+  ],
+  "tree_params": {
+    "max_depth": 4,
+    "min_samples_split": 5,
+    "min_samples_leaf": 2
+  }
+}
