@@ -91,20 +91,21 @@ def run_reward_analysis_episode(
 
 def compute_cumulative_rewards(reward_data: dict) -> dict:
     """
-    Compute cumulative rewards over the episode.
+    Compute accumulated penalties (absolute cumulative sums) over the episode.
+    This reframes negative rewards as cumulative costs that increase over time.
     
     Args:
         reward_data: Dict with individual reward component arrays
         
     Returns:
-        dict with cumulative values
+        dict with accumulated penalty values
     """
     return {
-        'flow_cumulative': np.cumsum(reward_data['flow_rewards']),
-        'emergency_cumulative': np.cumsum(reward_data['emergency_rewards']),
-        'truck_cumulative': np.cumsum(reward_data['truck_rewards']),
-        'car_cumulative': np.cumsum(reward_data['car_rewards']),
-        'total_cumulative': np.cumsum(reward_data['total_rewards']),
+        'flow_cumulative': np.cumsum(np.abs(reward_data['flow_rewards'])),
+        'emergency_cumulative': np.cumsum(np.abs(reward_data['emergency_rewards'])),
+        'truck_cumulative': np.cumsum(np.abs(reward_data['truck_rewards'])),
+        'car_cumulative': np.cumsum(np.abs(reward_data['car_rewards'])),
+        'total_cumulative': np.cumsum(np.abs(reward_data['total_rewards'])),
     }
 
 
@@ -187,8 +188,8 @@ def plot_reward_decomposition(
     )
     
     ax1.set_xlabel('Time Step', fontsize=12, fontweight='bold')
-    ax1.set_ylabel('Cumulative Reward', fontsize=12, fontweight='bold')
-    ax1.set_title('Cumulative Reward Decomposition: Agent Priorities', fontsize=14, fontweight='bold')
+    ax1.set_ylabel('Accumulated Penalty (Lower is Better)', fontsize=12, fontweight='bold')
+    ax1.set_title('Accumulated Penalty Decomposition: Agent Priorities', fontsize=14, fontweight='bold')
     ax1.legend(loc='upper left', fontsize=11, framealpha=0.95)
     ax1.grid(True, alpha=0.3)
     

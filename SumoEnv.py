@@ -435,7 +435,7 @@ class SumoEnv(gym.Env):
             # Multi-objective reward based on priority: emergency > truck > car > others
             # More balanced: 45% general, 30% emergency, 15% truck, 10% car
             flow_reward = -0.40 * (delta_weighted / 1000.0)
-            emergency_reward = -0.40 * (delta_emergency / 300.0)  # Increased weight & divisor
+            emergency_reward = -0.40 * (delta_emergency / 10.0)  # Dramatically increased impact (divisor: 300.0 → 10.0)
             truck_reward = -0.10 * (delta_truck / 1000.0)
             car_reward = -0.10 * (delta_car / 1000.0)
             
