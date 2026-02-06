@@ -1,31 +1,10 @@
-================================================================================
-CLASSIFICATION REPORT
-================================================================================
-              precision    recall  f1-score   support
-
-  Keep Phase       0.58      0.23      0.33      1463
-Switch Phase       0.53      0.84      0.65      1537
-
-    accuracy                           0.54      3000
-   macro avg       0.56      0.54      0.49      3000
-weighted avg       0.56      0.54      0.50      3000
-
-
-================================================================================
-CONFUSION MATRIX
-================================================================================
-True Negatives (Correctly Kept Phase):   341
-False Positives (Wrongly Switched):       1122
-False Negatives (Missed Switch Phase):    248  <-- CRITICAL STAT
-True Positives (Correctly Switched):      1289
-
-[WARNING] Tree MISSES 16.1% of Switch Phase decisions!
+IMPORTANT: Only one action class present - detailed metrics unavailable
 
 ================================================================================
 TOP 5 MOST IMPORTANT FEATURES
 ================================================================================
-1. Queue_Lane_8: 0.1044
-2. Bus_Lane_13: 0.0928
-3. Bus_Lane_9: 0.0909
-4. Bus_Lane_11: 0.0709
-5. Bus_Lane_12: 0.0633
+1. Bus_Lane_13: 0.0000
+2. Bus_Lane_12: 0.0000
+3. Bus_Lane_11: 0.0000
+4. Bus_Lane_10: 0.0000
+5. Bus_Lane_9: 0.0000

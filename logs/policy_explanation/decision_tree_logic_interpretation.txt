@@ -10,18 +10,18 @@ ACTION MEANINGS:
 TOP 5 DECISION FACTORS (Most Important)
 ================================================================================
 
-1. Queue_Lane_8              - Importance: 0.1044 (10.4%)
-2. Bus_Lane_13               - Importance: 0.0928 (9.3%)
-3. Bus_Lane_9                - Importance: 0.0909 (9.1%)
-4. Bus_Lane_11               - Importance: 0.0709 (7.1%)
-5. Bus_Lane_12               - Importance: 0.0633 (6.3%)
+1. Bus_Lane_13               - Importance: 0.0000 (0.0%)
+2. Bus_Lane_12               - Importance: 0.0000 (0.0%)
+3. Bus_Lane_11               - Importance: 0.0000 (0.0%)
+4. Bus_Lane_10               - Importance: 0.0000 (0.0%)
+5. Bus_Lane_9                - Importance: 0.0000 (0.0%)
 
 ================================================================================
 TREE STATISTICS
 ================================================================================
 
-Tree Depth:        7
-Number of Leaves:  36
+Tree Depth:        0
+Number of Leaves:  1
 Tree Accuracy:     See tree_summary.json
 
 ================================================================================
@@ -64,9 +64,6 @@ The following rules involve Emergency Vehicles (high priority):
 These rules are critical for emergency response times.
 
 Emergency-related features in the tree:
-  - Emergency_Lane_1               - Importance: 0.0173
-  - Emergency_Lane_4               - Importance: 0.0493
-  - Emergency_Lane_8               - Importance: 0.0607
 
 When Emergency vehicles are present (value > 0):
   -> The decision tree should prioritize allowing them through
@@ -76,7 +73,7 @@ When Emergency vehicles are present (value > 0):
 KEY INSIGHTS:
 ================================================================================
 
-Most Important Feature: Queue_Lane_8
+Most Important Feature: Bus_Lane_13
 This sensor has the most influence on switching decisions.
 
 Less Important Features:

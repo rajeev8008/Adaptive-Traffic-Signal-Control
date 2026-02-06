@@ -42,7 +42,7 @@ class ExplainConfig:
     COLLECTION_SEED = 42
     
     # Decision Tree hyperparameters
-    TREE_MAX_DEPTH = 4
+    TREE_MAX_DEPTH = 12
     TREE_MIN_SAMPLES_SPLIT = 5
     TREE_MIN_SAMPLES_LEAF = 2
     

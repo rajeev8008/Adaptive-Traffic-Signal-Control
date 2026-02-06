@@ -1,46 +1,43 @@
 {
-  "timestamp": "2026-02-06T22:44:18.306790",
+  "timestamp": "2026-02-06T23:38:55.482122",
   "model_path": "./models/ppo_mg_road/best_model.zip",
-  "episodes_collected": 25,
-  "sampling_mode": "stochastic",
+  "episodes_collected": 30,
+  "sampling_mode": "deterministic",
   "fidelity_metrics": {
-    "tree_accuracy": 0.5433333333333333,
-    "agent_agreement": 0.5433333333333333,
-    "tree_depth": 7,
-    "tree_leaves": 36,
-    "num_samples": 3000,
+    "tree_accuracy": 1.0,
+    "agent_agreement": 1.0,
+    "tree_depth": 0,
+    "tree_leaves": 1,
+    "num_samples": 3600,
     "top_features": [
       {
         "rank": 1,
-        "feature": "Queue_Lane_8",
-        "importance": 0.10442390060360603
+        "feature": "Bus_Lane_13",
+        "importance": 0.0
       },
       {
         "rank": 2,
-        "feature": "Bus_Lane_13",
-        "importance": 0.09283985221178001
+        "feature": "Bus_Lane_12",
+        "importance": 0.0
       },
       {
         "rank": 3,
-        "feature": "Bus_Lane_9",
-        "importance": 0.09088373903105727
+        "feature": "Bus_Lane_11",
+        "importance": 0.0
       },
       {
         "rank": 4,
-        "feature": "Bus_Lane_11",
-        "importance": 0.07090096047418608
+        "feature": "Bus_Lane_10",
+        "importance": 0.0
       },
       {
         "rank": 5,
-        "feature": "Bus_Lane_12",
-        "importance": 0.06330449921915307
+        "feature": "Bus_Lane_9",
+        "importance": 0.0
       }
     ],
     "confusion_matrix": {
-      "true_negatives": 341,
-      "false_positives": 1122,
-      "false_negatives": 248,
-      "true_positives": 1289
+      "note": "Only one action class present in data - confusion matrix unavailable"
     }
   },
   "feature_names": [
@@ -89,7 +86,7 @@
     "Bus_Lane_13"
   ],
   "tree_params": {
-    "max_depth": 7,
+    "max_depth": 15,
     "min_samples_split": 5,
     "min_samples_leaf": 2
   }
