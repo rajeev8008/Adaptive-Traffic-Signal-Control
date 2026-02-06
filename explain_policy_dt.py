@@ -23,6 +23,7 @@ import json
 from stable_baselines3 import PPO
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import seaborn as sns
 
 # Local imports
 from SumoEnv import SumoEnv
@@ -195,7 +196,7 @@ def train_decision_tree(X, y, feature_names, max_depth=4):
 
 
 # --- Fidelity Score Calculation ---
-def calculate_fidelity(agent, dt_classifier, X, y, env=None, feature_names=None):
+def calculate_fidelity(agent, dt_classifier, X, y, env=None, feature_names=None, output_dir=None):
     """
     Calculate how well the Decision Tree mimics the PPO agent.
     
@@ -211,6 +212,7 @@ def calculate_fidelity(agent, dt_classifier, X, y, env=None, feature_names=None)
         y: Ground truth actions from agent
         env: SumoEnv instance (optional, for fresh validation samples)
         feature_names: List of feature names (for reporting)
+        output_dir: Directory to save metrics files (optional)
     
     Returns:
         fidelity_metrics: Dictionary with fidelity scores
@@ -233,10 +235,18 @@ def calculate_fidelity(agent, dt_classifier, X, y, env=None, feature_names=None)
     # Score 3: Confusion Matrix & Classification Report
     unique_classes = np.unique(y)
     
+    # Storage for metrics text
+    metrics_text = []
+    
     if len(unique_classes) == 2:
         # Both classes present - show detailed report
         print(f"\n[FIDELITY] Detailed Classification Report:")
-        print(classification_report(y, tree_pred, target_names=["Keep Phase", "Switch Phase"]))
+        class_report = classification_report(y, tree_pred, target_names=["Keep Phase", "Switch Phase"])
+        print(class_report)
+        metrics_text.append("=" * 80)
+        metrics_text.append("CLASSIFICATION REPORT")
+        metrics_text.append("=" * 80)
+        metrics_text.append(class_report)
         
         cm = confusion_matrix(y, tree_pred)
         print(f"\n[FIDELITY] Confusion Matrix:")
@@ -245,6 +255,15 @@ def calculate_fidelity(agent, dt_classifier, X, y, env=None, feature_names=None)
         print(f"  False Negatives (Missed Switch Phase):    {cm[1][0]}  <-- CRITICAL STAT")
         print(f"  True Positives (Correctly Switched):      {cm[1][1]}")
         
+        # Add confusion matrix to metrics text
+        metrics_text.append("\n" + "=" * 80)
+        metrics_text.append("CONFUSION MATRIX")
+        metrics_text.append("=" * 80)
+        metrics_text.append(f"True Negatives (Correctly Kept Phase):   {cm[0][0]}")
+        metrics_text.append(f"False Positives (Wrongly Switched):       {cm[0][1]}")
+        metrics_text.append(f"False Negatives (Missed Switch Phase):    {cm[1][0]}  <-- CRITICAL STAT")
+        metrics_text.append(f"True Positives (Correctly Switched):      {cm[1][1]}")
+        
         # Warn if false negatives are high
         if cm[1][0] > 0:
             miss_rate = cm[1][0] / (cm[1][0] + cm[1][1]) if (cm[1][0] + cm[1][1]) > 0 else 0
@@ -252,24 +271,34 @@ def calculate_fidelity(agent, dt_classifier, X, y, env=None, feature_names=None)
                 print(f"\n[WARNING] Decision tree MISSES {100*miss_rate:.1f}% of Switch Phase decisions!")
                 print(f"[SUGGESTION] This means the tree is not fully capturing when the agent switches.")
                 print(f"[SUGGESTION] Try: increasing --depth, collecting more episodes, or using stochastic sampling")
+                metrics_text.append(f"\n[WARNING] Tree MISSES {100*miss_rate:.1f}% of Switch Phase decisions!")
+        
+        # Save confusion matrix heatmap if output_dir provided
+        if output_dir:
+            _save_confusion_matrix_heatmap(cm, output_dir)
     else:
         # Only one class present
-        print(f"\n[FIDELITY] ⚠️  IMPORTANT: Only one action class present in collected data!")
+        print(f"\n[FIDELITY] IMPORTANT: Only one action class present in collected data!")
         print(f"[FIDELITY] Classes found: {unique_classes}")
         print(f"[FIDELITY] Classification report unavailable (need both actions to evaluate)")
         print(f"\n[SUGGESTION] To see meaningful decision tree logic:")
         print(f"  1. Use --stochastic flag to sample actions probabilistically")
         print(f"  2. Increase --episodes (try 20+)")
         print(f"  3. Use a checkpoint from during training instead of the final model")
+        metrics_text.append("IMPORTANT: Only one action class present - detailed metrics unavailable")
     
     # Score 4: Feature importance
     feature_importance = dt_classifier.feature_importances_
     important_idx = np.argsort(feature_importance)[::-1][:5]  # Top 5
     
     print(f"\n[FIDELITY] Top 5 most important features:")
+    metrics_text.append("\n" + "=" * 80)
+    metrics_text.append("TOP 5 MOST IMPORTANT FEATURES")
+    metrics_text.append("=" * 80)
     for rank, idx in enumerate(important_idx, 1):
         importance = feature_importance[idx]
         print(f"  {rank}. {feature_names[idx]}: {importance:.4f}")
+        metrics_text.append(f"{rank}. {feature_names[idx]}: {importance:.4f}")
     
     # Build metrics dictionary
     metrics = {
@@ -302,7 +331,52 @@ def calculate_fidelity(agent, dt_classifier, X, y, env=None, feature_names=None)
             "note": "Only one action class present in data - confusion matrix unavailable"
         }
     
+    # Save metrics to text file if output_dir provided
+    if output_dir and metrics_text:
+        metrics_file = os.path.join(output_dir, "performance_metrics.txt")
+        try:
+            with open(metrics_file, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(metrics_text))
+            print(f"\n[FIDELITY] Performance metrics saved to {metrics_file}")
+        except Exception as e:
+            print(f"[WARNING] Could not save metrics file: {e}")
+    
     return metrics
+
+
+# --- Confusion Matrix Heatmap ---
+def _save_confusion_matrix_heatmap(cm, output_dir):
+    """
+    Create and save a heatmap visualization of the confusion matrix.
+    
+    Args:
+        cm: Confusion matrix from sklearn
+        output_dir: Directory to save the heatmap PNG
+    """
+    try:
+        plt.figure(figsize=(7, 6))
+        sns.heatmap(
+            cm,
+            annot=True,
+            fmt='d',
+            cmap='Blues',
+            xticklabels=["Keep Phase", "Switch Phase"],
+            yticklabels=["Keep Phase", "Switch Phase"],
+            cbar_kws={'label': 'Count'},
+            annot_kws={'fontsize': 14, 'fontweight': 'bold'}
+        )
+        plt.title('Decision Tree Confusion Matrix\n(Fidelity Assessment)', fontsize=14, fontweight='bold')
+        plt.ylabel('True Label (Agent Action)', fontsize=12)
+        plt.xlabel('Predicted Label (Tree Action)', fontsize=12)
+        plt.tight_layout()
+        
+        heatmap_path = os.path.join(output_dir, "confusion_matrix_heatmap.png")
+        plt.savefig(heatmap_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        print(f"[VISUALIZATION] Confusion matrix heatmap saved to {heatmap_path}")
+    except Exception as e:
+        print(f"[WARNING] Could not create confusion matrix heatmap: {e}")
 
 
 # --- Visualization ---
@@ -554,7 +628,7 @@ def explain_policy(model_path=None, episodes=10, stochastic=False):
     dt_classifier = train_decision_tree(X, y, feature_names, max_depth=ExplainConfig.TREE_MAX_DEPTH)
     
     # --- 8. Calculate Fidelity ---
-    fidelity_metrics = calculate_fidelity(agent, dt_classifier, X, y, env=env, feature_names=feature_names)
+    fidelity_metrics = calculate_fidelity(agent, dt_classifier, X, y, env=env, feature_names=feature_names, output_dir=ExplainConfig.OUTPUT_DIR)
     
     # --- 9. Visualize Tree ---
     tree_png_path = os.path.join(ExplainConfig.OUTPUT_DIR, ExplainConfig.TREE_PNG)
