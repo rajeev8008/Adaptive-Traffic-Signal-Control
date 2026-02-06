@@ -97,21 +97,21 @@
     <flow 
         id="emergency_ambulance_west_morning_peak" 
         begin="28800" end="39600" 
-        number="15" 
+        number="300" 
         type="ambulance" 
         from="263812623#1" 
         to="638541497#16" />
     <flow 
         id="emergency_ambulance_east_morning_peak" 
         begin="28800" end="39600" 
-        number="12" 
+        number="250" 
         type="ambulance" 
         from="1354145734#1" 
         to="638541495#1" />
     <flow 
         id="emergency_ambulance_south_morning_peak" 
         begin="28800" end="39600" 
-        number="10" 
+        number="200" 
         type="ambulance" 
         from="638541493#1" 
         to="328349209#9" />
@@ -120,14 +120,14 @@
     <flow 
         id="emergency_fire_truck_west_morning_peak" 
         begin="28800" end="39600" 
-        number="8" 
+        number="180" 
         type="fire_truck" 
         from="263812623#1" 
         to="328349209#9" />
     <flow 
         id="emergency_fire_truck_east_morning_peak" 
         begin="28800" end="39600" 
-        number="6" 
+        number="150" 
         type="fire_truck" 
         from="1354145734#1" 
         to="1148421491#1" />

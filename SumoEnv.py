@@ -271,12 +271,13 @@ class SumoEnv(gym.Env):
         terminated = False
         truncated = False
         reward = 0.0
+        reward_terms = {'flow': 0.0, 'emergency': 0.0, 'truck': 0.0, 'car': 0.0}
         observation = np.zeros(self.observation_space.shape, dtype=np.float32)
         
         if simulation_running:
             try:
                 observation = self._get_obs()
-                reward = self._get_reward()
+                reward, reward_terms = self._get_reward()  # Now receives tuple
                 
                 min_expected = self.traci_conn.simulation.getMinExpectedNumber()
                 # Terminate if all expected vehicles are done AND loaded vehicles were present
@@ -290,7 +291,7 @@ class SumoEnv(gym.Env):
         else:
             terminated = True
         
-        info = {}
+        info = {'reward_components': reward_terms}
         return observation, reward, terminated, truncated, info
 
     def _apply_action(self, action):
@@ -389,10 +390,10 @@ class SumoEnv(gym.Env):
         
         global INCOMING_LANES
         if INCOMING_LANES is None or len(INCOMING_LANES) == 0:
-            return 0.0
+            return 0.0, {'flow': 0.0, 'emergency': 0.0, 'truck': 0.0, 'car': 0.0}
         
         if self.traci_conn is None:
-            return 0.0
+            return 0.0, {'flow': 0.0, 'emergency': 0.0, 'truck': 0.0, 'car': 0.0}
         
         current_weighted_wait = 0.0
         current_emergency_wait = 0.0
@@ -433,27 +434,34 @@ class SumoEnv(gym.Env):
             
             # Multi-objective reward based on priority: emergency > truck > car > others
             # More balanced: 45% general, 30% emergency, 15% truck, 10% car
-            reward = (
-                -0.45 * (delta_weighted / 1000.0) +      # General flow optimization
-                -0.30 * (delta_emergency / 500.0) +      # Emergency priority (highest)
-                -0.15 * (delta_truck / 1000.0) +         # Truck priority
-                -0.10 * (delta_car / 1000.0)             # Car priority
-            )
+            flow_reward = -0.40 * (delta_weighted / 1000.0)
+            emergency_reward = -0.40 * (delta_emergency / 300.0)  # Increased weight & divisor
+            truck_reward = -0.10 * (delta_truck / 1000.0)
+            car_reward = -0.10 * (delta_car / 1000.0)
+            
+            reward = flow_reward + emergency_reward + truck_reward + car_reward
+            
+            # Create reward components dictionary for decomposition analysis
+            reward_terms = {
+                'flow': float(flow_reward),
+                'emergency': float(emergency_reward),
+                'truck': float(truck_reward),
+                'car': float(car_reward)
+            }
             
             # Update state
             self.last_weighted_wait = current_weighted_wait
             self.last_emergency_wait = current_emergency_wait
             self.last_truck_wait = current_truck_wait
             self.last_car_wait = current_car_wait
-            self.last_bus_wait = current_bus_wait
             
             reward = float(reward)
         except traci.TraCIException:
-            return 0.0
+            return 0.0, {'flow': 0.0, 'emergency': 0.0, 'truck': 0.0, 'car': 0.0}
         except Exception:
-            return 0.0
+            return 0.0, {'flow': 0.0, 'emergency': 0.0, 'truck': 0.0, 'car': 0.0}
         
-        return reward
+        return reward, reward_terms
     
     def pop_departed(self):
         deps = list(self._departed_buffer)
