@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-02-07T14:12:02.324170",
+  "contributions": {
+    "total_flow": -9.256200000000002,
+    "total_emergency": -8.8,
+    "total_truck": -0.006699999999999999,
+    "total_car": -0.558,
+    "total_reward": -18.6209,
+    "flow_pct": 49.70866069846248,
+    "emergency_pct": 47.25872541069443,
+    "truck_pct": 0.03598107502859689,
+    "car_pct": 2.996632815814488
+  }
+}
