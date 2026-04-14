@@ -35,6 +35,9 @@ Intelligent traffic signal controller using **Proximal Policy Optimization (PPO)
 
 ### Indiranagar Network (Cross-Map Evaluation)
 
+<img width="1670" height="1013" alt="image" src="https://github.com/user-attachments/assets/92fd5135-1645-49ec-b135-cbad7c087129" />
+
+
 | Vehicle Type | Baseline | PPO Agent | Improvement |
 |---|---|---|---|
 | Emergency | 25.73s | 23.83s | **7.4%** ✓ |
