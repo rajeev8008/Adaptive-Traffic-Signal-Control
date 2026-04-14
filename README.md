@@ -24,6 +24,7 @@ Intelligent traffic signal controller using **Proximal Policy Optimization (PPO)
 ## Performance Metrics
 
 ### Trinity Network (Primary)
+<img width="1698" height="1461" alt="image" src="https://github.com/user-attachments/assets/925cf0d0-0852-4f5d-a642-8184cc4778c6" />
 
 | Vehicle Type | Baseline | PPO Agent | Improvement |
 |---|---|---|---|
